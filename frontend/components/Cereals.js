@@ -1,11 +1,44 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function Cereals() {
+
+  const navigate = useNavigate()
   const [cereals, setCereals] = useState([])
 
   const logout = () => {
-
+  /// wipe the token from local storage
+  localStorage.removeItem('token')
+  /// redirect user login
+  navigate('/')
   }
+
+  useEffect(() => {
+ /// grab token from localStorage
+ const token = localStorage.getItem('token')
+ // if not there navigate user back to login
+ if(!token){
+  navigate('/')
+ } else {
+  const fetchCereals = async () => {
+    try {
+       // get cereals, appending token to Authorization header
+  // if response is a 401 Unauthorized perform a logout
+  // if reponse is ok set the cereals in component state
+  const response = await axios.get(
+    '/api/cereals', {
+      headers: {Authorization: token }}
+  )
+  setCereals(response.data)
+    } catch (error){
+      if(error?.response?.status == 401) logout()
+    }
+  }
+  fetchCereals()
+ }
+ 
+  }, [])
 
   return (
     <div className="container">
